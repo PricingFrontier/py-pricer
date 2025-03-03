@@ -1,0 +1,13 @@
+{
+  "IDpol": 3,
+  "Exposure": 0.5,
+  "VehPower": 6,
+  "VehAge": 2,
+  "DrivAge": 45,
+  "BonusMalus": 60,
+  "VehBrand": "B2",
+  "VehGas": "Diesel",
+  "Area": "B",
+  "Density": 900,
+  "Region": "Paris"
+}

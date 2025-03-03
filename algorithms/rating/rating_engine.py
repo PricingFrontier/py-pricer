@@ -74,3 +74,49 @@ def apply_base_rating(df):
     except Exception as e:
         logger.error(f"Error applying base rating: {e}")
         return df, None
+
+def calculate_premium(df):
+    """
+    Calculate the final premium based on base values and other factors.
+    
+    Args:
+        df: Input DataFrame with a 'BaseValue' column
+        
+    Returns:
+        DataFrame with a new 'Premium' column
+    """
+    try:
+        # Check if the BaseValue column exists
+        if "BaseValue" not in df.columns:
+            logger.warning("BaseValue column not found. Cannot calculate premium.")
+            return df
+        
+        # Apply a simple factor based on PowerGroup if it exists
+        if "PowerGroup" in df.columns:
+            power_factors = {
+                "Low": 0.8,
+                "Medium": 1.0,
+                "High": 1.2
+            }
+            
+            # Get the unique values of PowerGroup
+            power_groups = df["PowerGroup"].unique().to_list()
+            
+            # Create factors list matching the power_groups list
+            factors = [power_factors.get(pg, 1.0) for pg in power_groups]
+            
+            # Apply the power group factor
+            df = df.with_columns(
+                (pl.col("BaseValue") * pl.col("PowerGroup").replace(power_groups, factors)).alias("Premium")
+            )
+        else:
+            # No PowerGroup, just use the base value as the premium
+            df = df.with_columns(
+                pl.col("BaseValue").alias("Premium")
+            )
+        
+        logger.info(f"Calculated premiums for {df.height} rows")
+        return df
+    except Exception as e:
+        logger.error(f"Error calculating premium: {e}")
+        return df

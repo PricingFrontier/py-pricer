@@ -1,0 +1,41 @@
+[
+  {
+    "IDpol": 1,
+    "Exposure": 0.1,
+    "VehPower": 5,
+    "VehAge": 0,
+    "DrivAge": 55,
+    "BonusMalus": 50,
+    "VehBrand": "B12",
+    "VehGas": "Regular",
+    "Area": "D",
+    "Density": 1217,
+    "Region": "Rhone-Alpes"
+  },
+  {
+    "IDpol": 3,
+    "Exposure": 0.5,
+    "VehPower": 6,
+    "VehAge": 2,
+    "DrivAge": 45,
+    "BonusMalus": 60,
+    "VehBrand": "B2",
+    "VehGas": "Diesel",
+    "Area": "B",
+    "Density": 900,
+    "Region": "Paris"
+  },
+  {
+    "IDpol": 5,
+    "Exposure": 1.0,
+    "VehPower": 7,
+    "VehAge": 3,
+    "DrivAge": 35,
+    "BonusMalus": 55,
+    "VehBrand": "B3",
+    "VehGas": "Regular",
+    "Area": "C",
+    "Density": 800,
+    "Region": "Bretagne"
+  }
+]

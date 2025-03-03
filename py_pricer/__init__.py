@@ -51,6 +51,7 @@ __version__ = "0.1.0"
 from py_pricer import transformer
 from py_pricer import utils
 from py_pricer import config
+from py_pricer import initializer
 
 # Set up advanced logging configuration
 try:
@@ -59,11 +60,29 @@ try:
 except ImportError:
     logger.warning("Advanced logging configuration not available. Using basic configuration.")
 
+# Convenience function to initialize the project
+def initialize(force=False):
+    """
+    Initialize the py_pricer directory structure and example files by downloading from GitHub.
+    
+    Args:
+        force: Whether to force overwrite existing files
+        
+    Returns:
+        True if initialization was successful
+        
+    Raises:
+        RuntimeError: If initialization fails (e.g., download error)
+    """
+    from py_pricer.initializer import initialize as init_func
+    return init_func(force)
+
 # Define what's available when using "from py_pricer import *"
 __all__ = [
     'transformer',
     'utils',
     'config',
+    'initializer',
     'get_project_root',
     'get_algorithms_dir',
     'get_data_dir',
@@ -71,4 +90,5 @@ __all__ = [
     'get_rating_dir',
     'logger',
     '__version__',
+    'initialize',
 ]
