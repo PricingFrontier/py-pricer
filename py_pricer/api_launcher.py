@@ -73,6 +73,10 @@ def launch_api():
         else:
             print(f"Error: The run_api.py script does not have a main() function")
             sys.exit(1)
+    except ImportError as e:
+        print(f"Error: Missing dependency when running the API script: {e}")
+        print("Try installing the required package with: pip install python-json-logger")
+        sys.exit(1)
     except Exception as e:
         print(f"Error loading or running the API script: {e}")
         sys.exit(1)
