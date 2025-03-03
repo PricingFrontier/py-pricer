@@ -16,6 +16,7 @@ This separation allows users to focus on their pricing logic while the library h
 - Apply customizable data transformations
 - Calculate prices using user-defined rating algorithms
 - Interactive Streamlit dashboard to visualize data and results
+- REST API for programmatic premium calculations
 
 ## Installation
 
@@ -49,6 +50,140 @@ uv pip install py-pricer
    - `algorithms/transformations/`: Customize data transformation logic
    - `algorithms/rating/`: Implement your specific rating algorithms
 
+## API Usage
+
+The project includes a FastAPI-based REST API for programmatic premium calculations.
+
+### Starting the API Server
+
+```bash
+python run_api.py
+```
+
+This will start the API server at http://localhost:8000. You can configure the host, port, and other options using command-line arguments. For example:
+
+```bash
+python run_api.py --host 127.0.0.1 --port 8000 --reload --log-level debug
+```
+
+### API Endpoints
+
+1. **Calculate Premium for a Single Quote**
+
+   ```
+   POST /calculate_premium
+   ```
+
+   Example request:
+   ```json
+   {
+     "IDpol": 1,
+     "Exposure": 0.1,
+     "VehPower": 5,
+     "VehAge": 0,
+     "DrivAge": 55,
+     "BonusMalus": 50,
+     "VehBrand": "B12",
+     "VehGas": "Regular",
+     "Area": "D",
+     "Density": 1217,
+     "Region": "Rhone-Alpes"
+   }
+   ```
+
+   Example response:
+   ```json
+   {
+     "premium": 175.0,
+     "quote": {
+       "IDpol": 1,
+       "Exposure": 0.1,
+       "VehPower": 5,
+       "VehAge": 0,
+       "DrivAge": 55,
+       "BonusMalus": 50,
+       "VehBrand": "B12",
+       "VehGas": "Regular",
+       "Area": "D",
+       "Density": 1217,
+       "Region": "Rhone-Alpes"
+     },
+     "factors": {
+       "base_value": 175.0
+     }
+   }
+   ```
+
+2. **Calculate Premiums for Multiple Quotes (Batch)**
+
+   ```
+   POST /calculate_premiums_batch
+   ```
+
+   Example request:
+   ```json
+   {
+     "quotes": [
+       {
+         "IDpol": 1,
+         "Exposure": 0.1,
+         "VehPower": 5,
+         "VehAge": 0,
+         "DrivAge": 55,
+         "BonusMalus": 50,
+         "VehBrand": "B12",
+         "VehGas": "Regular",
+         "Area": "D",
+         "Density": 1217,
+         "Region": "Rhone-Alpes"
+       },
+       {
+         "IDpol": 3,
+         "Exposure": 0.5,
+         "VehPower": 6,
+         "VehAge": 2,
+         "DrivAge": 45,
+         "BonusMalus": 60,
+         "VehBrand": "B2",
+         "VehGas": "Diesel",
+         "Area": "B",
+         "Density": 900,
+         "Region": "Paris"
+       }
+     ]
+   }
+   ```
+
+### API Documentation
+
+FastAPI automatically generates interactive API documentation:
+
+- **Swagger UI**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+
+### Testing the API
+
+A test script is included to demonstrate how to use the API:
+
+```bash
+python test_api.py
+```
+
+The test script:
+- Uses real data files from the `algorithms/data` directory
+- Demonstrates single quote and batch processing
+- Shows how to handle API responses
+
+You can also test the API with curl:
+
+```bash
+# Test a single quote
+curl -X POST -H "Content-Type: application/json" -d @algorithms/data/1.json http://localhost:8000/calculate_premium
+
+# Use JSON pretty-print to format the response
+curl -X POST -H "Content-Type: application/json" -d @algorithms/data/1.json http://localhost:8000/calculate_premium | json_pp
+```
+
 ## Project Structure
 
 ```
@@ -59,13 +194,16 @@ py-pricer/
 │   ├── data_processor.py       # Data loading and processing
 │   ├── transformer.py          # Transformation framework
 │   ├── rating_engine.py        # Rating calculation engine
-│   └── app.py                  # Streamlit application
+│   ├── app.py                  # Streamlit application
+│   └── api.py                  # FastAPI application
 ├── algorithms/                 # USER-EDITABLE CONTENT
 │   ├── data/                   # Your data files
 │   │   └── input/              # Raw input data (JSON/parquet)
 │   ├── rating_tables/          # Your rating tables
 │   ├── transformations/        # Your transformation logic
 │   └── rating/                 # Your rating algorithms
+├── run_api.py                  # Script to run the API server
+└── test_api.py                 # Script to test the API
 ```
 
 ## Workflow
@@ -73,6 +211,7 @@ py-pricer/
 1. The library code (`py_pricer`) provides the infrastructure and remains unchanged
 2. Users customize their pricing models by editing files in the `algorithms` folder
 3. The Streamlit app uses both components to process data and calculate prices
+4. The API provides programmatic access to the pricing functionality
 
 ## License
 

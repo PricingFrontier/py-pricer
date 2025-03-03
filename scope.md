@@ -27,7 +27,8 @@ py-pricer/
 │   ├── data_processor.py       # Data loading and processing functions
 │   ├── transformer.py          # Data transformation logic
 │   ├── rating_engine.py        # Price calculation logic
-│   └── app.py                  # Streamlit app implementation
+│   ├── app.py                  # Streamlit app implementation
+│   └── api.py                  # FastAPI API implementation
 ├── algorithms/                 # USER-EDITABLE CONTENT
 │   ├── data/                   # User's data files (input data)
 │   │   └── input/              # Raw input data (JSON/parquet)
@@ -35,6 +36,8 @@ py-pricer/
 │   ├── transformations/        # User-defined data transformation logic
 │   └── rating/                 # User-defined rating algorithms
 ├── tests/                      # Test cases
+├── run_api.py                  # Script to run the API server
+├── test_api.py                 # Script to test the API
 ├── pyproject.toml              # Package and UV configuration
 ├── requirements.txt            # Dependencies
 └── README.md                   # Usage documentation
@@ -81,6 +84,20 @@ py-pricer/
   - Show intermediate steps in the rating process
   - Basic visualization of pricing components
 
+### 6. API Integration
+- **FastAPI Implementation**
+  - REST API for programmatic access to pricing functionality
+  - Single quote processing endpoint
+  - Batch processing for multiple quotes
+  - JSON input and output format
+  - Swagger UI for interactive API documentation
+
+- **API Features**
+  - Input validation using Pydantic models
+  - Consistent pricing with the UI application
+  - Error handling and appropriate HTTP responses
+  - Integration with the existing transformation and rating modules
+
 ## Implementation Details
 
 ### Technology Stack
@@ -88,6 +105,7 @@ py-pricer/
 - **Data Processing**: Polars
 - **File Formats**: JSON, Parquet (via pyarrow)
 - **UI**: Streamlit
+- **API**: FastAPI with Uvicorn
 - **Package Manager**: UV
 - **Testing**: Pytest
 
@@ -105,12 +123,14 @@ py-pricer/
 3. Install the library with UV: `uv pip install py-pricer`
 4. Initialize the project structure with example: `python -m py_pricer.initializer`
 5. Run the Streamlit app to see the example in action: `python -m py_pricer.app`
-6. Customize the example by editing files in the `algorithms` folder:
+6. Run the API server to enable programmatic access: `python run_api.py`
+7. Test the API to understand its functionality: `python test_api.py`
+8. Customize the example by editing files in the `algorithms` folder:
    - Replacing sample data in `algorithms/data/input/`
    - Modifying rating tables in `algorithms/rating_tables/`
    - Adapting transformation logic in `algorithms/transformations/`
    - Updating rating algorithms in `algorithms/rating/`
-7. Rerun the app to see your customizations
+9. Rerun the app and API to see your customizations
 
 ## Development Workflow
 1. Library developers work on the `py_pricer` package to improve core functionality
@@ -124,7 +144,6 @@ py-pricer/
 - Advanced data visualization
 - Complex statistical modeling
 - Database integration
-- API endpoints
 - Multi-user support
 - Detailed logging and monitoring
 - Deployment configurations 
