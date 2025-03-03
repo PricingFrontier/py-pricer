@@ -30,6 +30,98 @@ GITHUB_REPO_URL = "https://github.com/PricingFrontier/py-pricer"
 GITHUB_BRANCH = "main"
 GITHUB_ARCHIVE_URL = f"{GITHUB_REPO_URL}/archive/refs/heads/{GITHUB_BRANCH}.zip"
 ALGORITHMS_DIR_NAME = "algorithms"
+API_TEMPLATE_FILES = ["run_api.py", "test_api.py"]
+
+def download_api_templates_from_github(force=False):
+    """
+    Download the API template files from the GitHub repository.
+    
+    Args:
+        force: Whether to force overwrite existing files
+        
+    Returns:
+        List of copied template files
+        
+    Raises:
+        Exception: If the download or extraction fails
+    """
+    logger.info(f"Downloading API template files from GitHub: {GITHUB_ARCHIVE_URL}")
+    
+    # List to track copied files
+    copied_files = []
+    
+    # Create a temporary directory for the download
+    with tempfile.TemporaryDirectory() as temp_dir:
+        try:
+            # Download the repository ZIP archive
+            zip_path = os.path.join(temp_dir, "repo.zip")
+            urllib.request.urlretrieve(GITHUB_ARCHIVE_URL, zip_path)
+            
+            logger.info(f"Repository archive downloaded to: {zip_path}")
+            
+            # Extract the ZIP archive
+            with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+                zip_ref.extractall(temp_dir)
+            
+            # Find the extracted directory name
+            repo_name = f"py-pricer-{GITHUB_BRANCH}"
+            repo_dir = os.path.join(temp_dir, repo_name)
+            
+            if not os.path.exists(repo_dir):
+                raise FileNotFoundError(f"Repository directory not found: {repo_dir}")
+            
+            # Find the templates directory in the repo
+            templates_dir = os.path.join(repo_dir, "py_pricer", "templates", "api")
+            
+            if not os.path.exists(templates_dir):
+                raise FileNotFoundError(f"API templates directory not found: {templates_dir}")
+            
+            # Get the current working directory
+            cwd = os.getcwd()
+            
+            # Copy each template file to the working directory
+            for filename in API_TEMPLATE_FILES:
+                src_path = os.path.join(templates_dir, filename)
+                dst_path = os.path.join(cwd, filename)
+                
+                # Skip if destination file already exists and force is False
+                if os.path.exists(dst_path) and not force:
+                    logger.info(f"File already exists, skipping: {dst_path}")
+                    continue
+                    
+                # Copy the file if source exists
+                if os.path.exists(src_path):
+                    try:
+                        shutil.copy2(src_path, dst_path)
+                        os.chmod(dst_path, 0o755)  # Make executable
+                        logger.info(f"Copied API template file: {filename}")
+                        copied_files.append(dst_path)
+                    except Exception as e:
+                        logger.error(f"Error copying API template file {filename}: {e}")
+                else:
+                    logger.warning(f"API template file not found: {src_path}")
+            
+            return copied_files
+            
+        except urllib.error.URLError as e:
+            error_msg = f"Network error when downloading from GitHub: {e}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+        
+        except zipfile.BadZipFile:
+            error_msg = "Downloaded file is not a valid ZIP archive"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
+            
+        except FileNotFoundError as e:
+            error_msg = f"File not found: {e}"
+            logger.error(error_msg)
+            raise
+            
+        except Exception as e:
+            error_msg = f"Error downloading API templates from GitHub: {e}"
+            logger.error(error_msg)
+            raise RuntimeError(error_msg)
 
 def download_algorithms_from_github(force=False):
     """
@@ -129,6 +221,12 @@ def initialize(force=False):
     """
     try:
         algorithms_dir = download_algorithms_from_github(force)
+        
+        # Download API template files
+        copied_files = download_api_templates_from_github(force)
+        if copied_files:
+            logger.info(f"Downloaded {len(copied_files)} API template files to your working directory.")
+        
         if algorithms_dir:
             logger.info(f"Initialization complete. Example files have been downloaded from GitHub to: {algorithms_dir}")
             return True

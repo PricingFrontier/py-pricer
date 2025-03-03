@@ -34,65 +34,79 @@ uv pip install py-pricer
 
 ## Getting Started
 
-After installation, you need to initialize the `algorithms` folder with example files:
+After installation, you need to initialize the `algorithms` folder with example files. You can do this using the command-line tool:
+
+```bash
+py-pricer-init
+```
+
+Or if you want to force overwrite existing files:
+
+```bash
+py-pricer-init --force
+```
+
+You can also initialize programmatically:
 
 ```python
 import py_pricer
 py_pricer.initialize()
 ```
 
-This will download the example algorithms directory from GitHub, containing sample data, transformations, and rating logic.
+This will download the example algorithms directory from GitHub, containing sample data, transformations, and rating logic. The initializer will also copy useful template scripts to your working directory, including scripts for running and testing the API.
 
 ## Running the Streamlit App
 
-After installing py-pricer and initializing the algorithms folder, you can run the Streamlit app using any of these methods:
-
-### Method 1: Using the console script (recommended)
-
-After installation, you can run the app with a simple command:
+After installing py-pricer and initializing the algorithms folder, you can run the Streamlit app using the console script:
 
 ```bash
 py-pricer-app
 ```
 
+If you encounter issues with the console script, you can also run the app directly:
+
+```bash
+python -c "from py_pricer.app_launcher import launch_app; launch_app()"
+```
+
 This will automatically open your default web browser with the Streamlit dashboard. If the browser doesn't open automatically, you can access the app at http://localhost:8501.
-
-### Method 2: Using the run_app.py script
-
-The repository includes a script to run the Streamlit app. Download this script and run it:
-
-```bash
-# Download the script from GitHub
-curl -o run_app.py https://raw.githubusercontent.com/PricingFrontier/py-pricer/main/run_app.py
-
-# Make it executable
-chmod +x run_app.py
-
-# Run the app
-python run_app.py
-```
-
-This will also open your browser automatically with the Streamlit dashboard.
-
-### Method 3: Using Streamlit directly
-
-You can run the app directly with Streamlit if you know the path to the app.py file:
-
-```bash
-# Find the path to the app.py file
-APP_PATH=$(python -c "import os, py_pricer; print(os.path.join(os.path.dirname(py_pricer.__file__), 'app.py'))")
-
-# Run Streamlit with the app.py file
-streamlit run "$APP_PATH" --browser.serverAddress=localhost --server.headless=false
-```
-
-This ensures the browser opens and the server is not in headless mode.
 
 ## API Usage
 
-The project includes a FastAPI-based REST API for programmatic premium calculations.
+The project includes a FastAPI-based REST API for programmatic premium calculations. The API provides a way to integrate the pricing logic into other applications or services.
+
+### Setting Up the API
+
+When you install the py_pricer package and run the initializer, it automatically creates two API scripts in your working directory:
+
+```bash
+# First, initialize the package
+python -m py_pricer.initializer
+
+# This creates:
+# - run_api.py: Script to run the API server
+# - test_api.py: Script to test the API
+```
+
+These scripts are designed to work with both development and production environments, with automatic path resolution for resources like sample data.
 
 ### Starting the API Server
+
+To start the API server, you can use the console script provided by the package:
+
+```bash
+py-pricer-api
+```
+
+This will automatically check for a run_api.py script in your current directory, creating one from the template if it doesn't exist, and then run it with default settings.
+
+You can also pass command-line arguments to customize the API server:
+
+```bash
+py-pricer-api --host 0.0.0.0 --port 8080 --log-level debug
+```
+
+If you prefer, you can also run the API script directly:
 
 ```bash
 python run_api.py
@@ -103,6 +117,17 @@ This will start the API server at http://localhost:8000. You can configure the h
 ```bash
 python run_api.py --host 127.0.0.1 --port 8000 --reload --log-level debug
 ```
+
+### Customizing the API
+
+One of the key features of the py_pricer API is that it's designed to be customizable. Since the API scripts are copied to your working directory, you can modify them to suit your specific needs:
+
+- Customize API endpoints
+- Add authentication
+- Modify request/response models
+- Add new features or integrations
+
+The API scripts are designed to continue working correctly with the py_pricer package, using its path resolution capabilities to find the algorithms directory and other resources.
 
 ### API Endpoints
 
@@ -247,10 +272,59 @@ py-pricer/
 ## Workflow
 
 1. The library code (`py_pricer`) provides the infrastructure and remains unchanged
-2. Users customize their pricing models by editing files in the `algorithms` folder
-3. The Streamlit app uses both components to process data and calculate prices
-4. The API provides programmatic access to the pricing functionality
+2. Initialize the environment using `py-pricer-init` to set up the algorithms folder and API templates
+3. Users customize their pricing models by editing files in the `algorithms` folder
+4. The Streamlit app (`py-pricer-app`) uses both components to process data and calculate prices
+5. The API (`py-pricer-api`) provides programmatic access to the pricing functionality
 
 ## License
 
 [License information]
+
+## Troubleshooting
+
+### Common Issues
+
+#### "Command not found" errors with console scripts
+
+If you see `py-pricer-app: command not found`, `py-pricer-api: command not found`, or `py-pricer-init: command not found` when trying to run the console scripts, it might be because:
+
+1. The virtual environment is not activated
+2. The package was not installed in development mode
+3. Your Python environment's bin directory is not in your PATH
+
+Try running the applications directly:
+
+```bash
+# For the Streamlit app (make sure your virtual environment is activated first)
+python -c "from py_pricer.app_launcher import launch_app; launch_app()"
+
+# For the API server
+python -c "from py_pricer.api_launcher import launch_api; launch_api()"
+
+# For the initializer
+python -c "from py_pricer.initializer_launcher import launch_initializer; launch_initializer()"
+```
+
+#### API server won't start
+
+If you have issues starting the API server, check the following:
+
+1. Make sure you've activated your virtual environment
+2. Ensure the required packages (FastAPI, Uvicorn) are installed
+3. Try running with debug logging:
+   ```bash
+   python run_api.py --log-level debug
+   ```
+
+#### Can't find data or algorithms
+
+If the app can't find the data or algorithms directory:
+
+1. Make sure you've run the initializer:
+   ```python
+   import py_pricer
+   py_pricer.initialize()
+   ```
+2. Check that the algorithms directory exists in your working directory
+3. If you're in a development environment, try specifying the path manually

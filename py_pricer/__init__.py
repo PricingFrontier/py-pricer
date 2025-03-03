@@ -74,6 +74,9 @@ from py_pricer import transformer
 from py_pricer import utils
 from py_pricer import config
 from py_pricer import initializer
+from py_pricer import app_launcher
+from py_pricer import api_launcher
+from py_pricer import initializer_launcher
 
 # Set up advanced logging configuration
 try:
@@ -85,7 +88,11 @@ except ImportError:
 # Convenience function to initialize the project
 def initialize(force=False):
     """
-    Initialize the py_pricer directory structure and example files by downloading from GitHub.
+    Initialize the py_pricer directory structure and example files.
+    
+    This function performs the following tasks:
+    1. Downloads the algorithms directory from GitHub (includes sample data and algorithms)
+    2. Copies API template scripts to your working directory (run_api.py and test_api.py)
     
     Args:
         force: Whether to force overwrite existing files
@@ -105,6 +112,9 @@ __all__ = [
     'utils',
     'config',
     'initializer',
+    'app_launcher',
+    'api_launcher',
+    'initializer_launcher',
     'get_project_root',
     'get_algorithms_dir',
     'get_data_dir',

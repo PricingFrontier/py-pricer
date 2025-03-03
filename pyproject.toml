@@ -3,7 +3,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "py-pricer"
+name = "py_pricer"
 version = "0.1.0"
 authors = [
     {name = "Insurance Pricing Team"}
@@ -21,6 +21,9 @@ dependencies = [
     "pyarrow>=14.0.0",
     "streamlit>=1.30.0",
     "typing-extensions>=4.0.0",
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "requests>=2.31.0",
 ]
 
 [project.urls]
@@ -29,9 +32,15 @@ dependencies = [
 
 [project.scripts]
 py-pricer-app = "py_pricer.app_launcher:launch_app"
+py-pricer-api = "py_pricer.api_launcher:launch_api"
+py-pricer-init = "py_pricer.initializer_launcher:launch_initializer"
 
 [tool.setuptools]
 packages = ["py_pricer"]
+include-package-data = true
+
+# Templates are now downloaded from GitHub during initialization
+# instead of being included in the package
 
 [tool.uv]
 python-preference = "system"
