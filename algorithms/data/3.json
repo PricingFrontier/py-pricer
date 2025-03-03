@@ -1,0 +1,13 @@
+{
+    "IDpol": 3,
+    "Exposure": 0.77,
+    "VehPower": 5,
+    "VehAge": 0,
+    "DrivAge": 55,
+    "BonusMalus": 50,
+    "VehBrand": "B12",
+    "VehGas": "Regular",
+    "Area": "D",
+    "Density": 1217,
+    "Region": "Rhone-Alpes"
+}

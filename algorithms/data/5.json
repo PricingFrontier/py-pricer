@@ -1,0 +1,13 @@
+{
+    "IDpol": 5,
+    "Exposure": 0.75,
+    "VehPower": 6,
+    "VehAge": 2,
+    "DrivAge": 52,
+    "BonusMalus": 50,
+    "VehBrand": "B12",
+    "VehGas": "Diesel",
+    "Area": "B",
+    "Density": 54,
+    "Region": "Picardie"
+}

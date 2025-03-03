@@ -1,0 +1,13 @@
+{
+    "IDpol": 10,
+    "Exposure": 0.09,
+    "VehPower": 7,
+    "VehAge": 0,
+    "DrivAge": 46,
+    "BonusMalus": 50,
+    "VehBrand": "B12",
+    "VehGas": "Diesel",
+    "Area": "B",
+    "Density": 76,
+    "Region": "Aquitaine"
+}
