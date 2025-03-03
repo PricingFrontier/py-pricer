@@ -29,8 +29,30 @@ def get_project_root():
     return os.path.dirname(package_dir)
 
 def get_algorithms_dir():
-    """Get the absolute path to the algorithms directory."""
-    return os.path.join(get_project_root(), "algorithms")
+    """
+    Get the absolute path to the algorithms directory.
+    
+    This function first checks if the algorithms directory exists in the current
+    working directory (which is the case when the package is installed and used).
+    If not found, it falls back to looking in the project root (which is the case
+    during development).
+    """
+    # First check if algorithms exists in the current working directory
+    cwd_algorithms = os.path.join(os.getcwd(), "algorithms")
+    if os.path.exists(cwd_algorithms) and os.path.isdir(cwd_algorithms):
+        logger.debug(f"Found algorithms directory in current working directory: {cwd_algorithms}")
+        return cwd_algorithms
+    
+    # If not found in current directory, check the project root (development case)
+    project_root_algorithms = os.path.join(get_project_root(), "algorithms")
+    if os.path.exists(project_root_algorithms) and os.path.isdir(project_root_algorithms):
+        logger.debug(f"Found algorithms directory in project root: {project_root_algorithms}")
+        return project_root_algorithms
+    
+    # If neither location has the algorithms directory, return the CWD path
+    # (it will be created there when initialize() is called)
+    logger.debug(f"Algorithms directory not found, defaulting to current working directory: {cwd_algorithms}")
+    return cwd_algorithms
 
 def get_data_dir():
     """Get the absolute path to the data directory."""

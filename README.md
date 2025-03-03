@@ -28,27 +28,65 @@ pip install uv
 uv venv
 # Activate the environment (varies by platform)
 
-# Install the library
+# Install the py-pricer package
 uv pip install py-pricer
 ```
 
 ## Getting Started
 
-1. Initialize the project structure with examples:
-   ```bash
-   python -m py_pricer.initializer
-   ```
+After installation, you need to initialize the `algorithms` folder with example files:
 
-2. Run the Streamlit app to see the example in action:
-   ```bash
-   python -m py_pricer.app
-   ```
+```python
+import py_pricer
+py_pricer.initialize()
+```
 
-3. Customize the pricing model by editing files in the `algorithms` folder:
-   - `algorithms/data/input/`: Replace with your own quote data
-   - `algorithms/rating_tables/`: Modify rating tables for your pricing factors
-   - `algorithms/transformations/`: Customize data transformation logic
-   - `algorithms/rating/`: Implement your specific rating algorithms
+This will download the example algorithms directory from GitHub, containing sample data, transformations, and rating logic.
+
+## Running the Streamlit App
+
+After installing py-pricer and initializing the algorithms folder, you can run the Streamlit app using any of these methods:
+
+### Method 1: Using the console script (recommended)
+
+After installation, you can run the app with a simple command:
+
+```bash
+py-pricer-app
+```
+
+This will automatically open your default web browser with the Streamlit dashboard. If the browser doesn't open automatically, you can access the app at http://localhost:8501.
+
+### Method 2: Using the run_app.py script
+
+The repository includes a script to run the Streamlit app. Download this script and run it:
+
+```bash
+# Download the script from GitHub
+curl -o run_app.py https://raw.githubusercontent.com/PricingFrontier/py-pricer/main/run_app.py
+
+# Make it executable
+chmod +x run_app.py
+
+# Run the app
+python run_app.py
+```
+
+This will also open your browser automatically with the Streamlit dashboard.
+
+### Method 3: Using Streamlit directly
+
+You can run the app directly with Streamlit if you know the path to the app.py file:
+
+```bash
+# Find the path to the app.py file
+APP_PATH=$(python -c "import os, py_pricer; print(os.path.join(os.path.dirname(py_pricer.__file__), 'app.py'))")
+
+# Run Streamlit with the app.py file
+streamlit run "$APP_PATH" --browser.serverAddress=localhost --server.headless=false
+```
+
+This ensures the browser opens and the server is not in headless mode.
 
 ## API Usage
 

@@ -27,6 +27,9 @@ dependencies = [
 "Homepage" = "https://github.com/yourusername/py-pricer"
 "Bug Tracker" = "https://github.com/yourusername/py-pricer/issues"
 
+[project.scripts]
+py-pricer-app = "py_pricer.app_launcher:launch_app"
+
 [tool.setuptools]
 packages = ["py_pricer"]
 

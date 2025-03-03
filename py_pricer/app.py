@@ -4,7 +4,7 @@ import streamlit as st
 import polars as pl
 import logging
 from pathlib import Path
-from py_pricer import transformer, get_data_dir, logger, get_rating_dir
+from py_pricer import transformer, get_data_dir, logger, get_rating_dir, get_algorithms_dir
 from py_pricer.utils import find_files_by_extension, safe_load_json, safe_load_parquet
 from py_pricer.config import STREAMLIT_PAGE_TITLE, STREAMLIT_PAGE_ICON, STREAMLIT_LAYOUT, SUPPORTED_DATA_FORMATS, MAX_ROWS_DISPLAY
 
@@ -89,13 +89,33 @@ def main():
             layout=STREAMLIT_LAYOUT
         )
         
-        st.title(STREAMLIT_PAGE_TITLE)
+        # Title and introduction
+        st.title("py-pricer Dashboard")
+        st.write("Upload insurance quote data, apply transformations, and calculate premiums using the rating engine.")
         
+        # Log the paths we're using to help with debugging
+        algorithms_dir = get_algorithms_dir()
+        data_dir = get_data_dir()
+        logger.info(f"Using algorithms directory: {algorithms_dir}")
+        logger.info(f"Using data directory: {data_dir}")
+        logger.info(f"Current working directory: {os.getcwd()}")
+        
+        # Check if algorithms directory exists
+        if not os.path.exists(algorithms_dir):
+            st.error(
+                "The algorithms directory was not found. Please run the initializer first:\n\n"
+                "```python\n"
+                "import py_pricer\n"
+                "py_pricer.initialize()\n"
+                "```"
+            )
+            return
+        
+        # Continue with the rest of the app
         # Create tabs for the different views
         tab1, tab2, tab3 = st.tabs(["Input Data", "Transformed Data", "Rating Calculation"])
         
         # Find data files in the algorithms/data directory using the utility function
-        data_dir = get_data_dir()
         data_files = find_data_files(data_dir)
         
         # Debug info to see what's happening
@@ -269,4 +289,9 @@ def main():
         st.error(error_msg)
 
 if __name__ == "__main__":
+    # When run directly, just call main() and let Streamlit handle the execution
+    # This is the simplest approach and avoids any recursive launching issues
     main()
+else:
+    # When imported as a module, the main function will be called by Streamlit
+    pass
