@@ -1,26 +1,34 @@
 """
-Simple rating engine for insurance pricing.
+Rating engine for the insurance pricing library.
 
-This module loads base values from a CSV file and applies them to input data.
+This module handles the rating calculations by applying base values
+and factors to the input data.
 """
 
 import os
 import polars as pl
 import logging
+from pathlib import Path
+from typing import Dict, Optional, Union, Tuple
+
+from py_pricer import get_rating_dir
+from py_pricer.utils import ensure_directory_exists
 
 # Create a module-specific logger
 logger = logging.getLogger('py_pricer.rating_engine')
 
-def load_base_values():
+def load_base_values() -> Optional[pl.DataFrame]:
     """
     Load base values from the CSV file in the tables directory.
     
     Returns:
-        A DataFrame containing the base values or None if loading fails
+        Optional[pl.DataFrame]: DataFrame containing the base values or None if loading fails
     """
     try:
-        # Path to the base values CSV file
-        base_values_path = os.path.join(os.path.dirname(__file__), "tables", "base-values.csv")
+        # Get the rating directory and construct the path to the base values CSV
+        rating_dir = get_rating_dir()
+        tables_dir = os.path.join(rating_dir, "tables")
+        base_values_path = os.path.join(tables_dir, "base-values.csv")
         
         # Check if the file exists
         if not os.path.exists(base_values_path):
@@ -34,19 +42,20 @@ def load_base_values():
         
         return df
     except Exception as e:
-        logger.error(f"Error loading base values: {e}")
+        logger.error(f"Error loading base values: {e}", exc_info=True)
         return None
 
-def apply_base_rating(df):
+def apply_base_rating(df: pl.DataFrame) -> Tuple[pl.DataFrame, Optional[pl.DataFrame]]:
     """
     Apply base values to the input data based on the Area column.
     
     Args:
-        df: Input DataFrame with an 'Area' column
+        df (pl.DataFrame): Input data
         
     Returns:
-        - DataFrame with base values applied as a new 'BaseValue' column
-        - Base values table or None if loading fails
+        Tuple[pl.DataFrame, Optional[pl.DataFrame]]: 
+            - DataFrame with base values applied
+            - Base values table or None if loading fails
     """
     try:
         # Check if the Area column exists
@@ -60,17 +69,16 @@ def apply_base_rating(df):
             logger.warning("Failed to load base values. Skipping base rating.")
             return df, None
         
-        # Convert base values to lists for the replace method
-        area_values = base_values_df["Area"].to_list()
-        base_values = base_values_df["Base"].to_list()
+        # Convert base values to a dictionary for faster lookups
+        base_dict = dict(zip(base_values_df["Area"].to_list(), base_values_df["Base"].to_list()))
         
         # Create a new column with the base value
-        result_df = df.with_columns(
-            pl.col("Area").replace(area_values, base_values).alias("BaseValue")
+        df = df.with_columns(
+            pl.col("Area").map_dict(base_dict).alias("BaseValue")
         )
         
         logger.info(f"Applied base values to {df.height} rows")
-        return result_df, base_values_df
+        return df, base_values_df
     except Exception as e:
-        logger.error(f"Error applying base rating: {e}")
+        logger.error(f"Error applying base rating: {e}", exc_info=True)
         return df, None
