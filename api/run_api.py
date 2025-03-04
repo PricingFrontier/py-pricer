@@ -24,7 +24,7 @@ def main():
     
     # Configure Uvicorn server
     uvicorn_config = {
-        "app": "py_pricer.api:app",
+        "app": "api.api:app",  # Path to the FastAPI app
         "host": args.host,
         "port": args.port,
         "reload": args.reload,

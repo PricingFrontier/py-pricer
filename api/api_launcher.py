@@ -31,8 +31,15 @@ def launch_api():
     # Log information about how we're running
     print(f"API Launcher - Working directory: {cwd}")
     
-    # Check if the run_api.py template exists in the current working directory
-    run_api_path = os.path.join(cwd, "run_api.py")
+    # Define the api directory
+    api_dir = os.path.join(cwd, "api")
+    
+    # Create the api directory if it doesn't exist
+    if not os.path.exists(api_dir):
+        os.makedirs(api_dir, exist_ok=True)
+    
+    # Check if the run_api.py template exists in the api directory
+    run_api_path = os.path.join(api_dir, "run_api.py")
     if not os.path.exists(run_api_path):
         # Copy the template if it exists
         template_path = os.path.join(templates_dir, "run_api.py")
@@ -62,7 +69,7 @@ def launch_api():
     
     # Load the run_api.py module and call its main function
     try:
-        spec = importlib.util.spec_from_file_location("run_api", run_api_path)
+        spec = importlib.util.spec_from_file_location("api.run_api", run_api_path)
         run_api_module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(run_api_module)
         
@@ -71,7 +78,7 @@ def launch_api():
             sys.argv = [run_api_path] + args  # Replace sys.argv with our args
             run_api_module.main()
         else:
-            print(f"Error: The run_api.py script does not have a main() function")
+            print(f"Error: The api/run_api.py script does not have a main() function")
             sys.exit(1)
     except ImportError as e:
         print(f"Error: Missing dependency when running the API script: {e}")

@@ -5,15 +5,12 @@ This module provides an API that accepts JSON input and returns premium calculat
 """
 
 import os
-import json
-import polars as pl
-from typing import Dict, Any, List, Union, Optional
 import logging
+from typing import Dict, Any, List, Union, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from py_pricer import transformer, get_data_dir, logger, get_rating_dir
-from py_pricer.utils import safe_load_json
+from py_pricer import get_rating_dir
 import importlib.util
 
 # Create a module-specific logger
@@ -69,7 +66,7 @@ def import_rating_engine():
         
         if not os.path.exists(rating_engine_path):
             logger.error(f"Rating engine not found at: {rating_engine_path}")
-            return None, None
+            return None
             
         module_name = "rating_engine"
         spec = importlib.util.spec_from_file_location(module_name, rating_engine_path)
@@ -77,13 +74,13 @@ def import_rating_engine():
         spec.loader.exec_module(module)
         
         logger.info(f"Successfully imported rating engine from {rating_engine_path}")
-        return module.apply_base_rating, module.load_base_values
+        return module
     except Exception as e:
         logger.error(f"Error importing rating engine: {e}", exc_info=True)
-        return None, None
+        return None
 
-# Import the rating engine functions
-apply_base_rating, load_base_values = import_rating_engine()
+# Import the rating_engine module
+rating_engine = import_rating_engine()
 
 # Create the FastAPI application
 app = FastAPI(
@@ -104,31 +101,24 @@ async def calculate_premium(quote: InsuranceQuote):
     This endpoint accepts a JSON object representing an insurance quote and returns the calculated premium.
     """
     try:
-        # Convert to DataFrame
-        df = pl.DataFrame([quote.dict()])
+        if rating_engine is None:
+            raise HTTPException(status_code=500, detail="Rating engine not available")
         
-        # Apply category indexing (transformations)
-        df, _ = transformer.apply_category_indexing(df)
-        
-        # Apply base rating
-        df, base_values = apply_base_rating(df)
-        
-        if "BaseValue" not in df.columns:
-            raise HTTPException(status_code=500, detail="Failed to calculate base premium")
-        
-        # In a real application, you would apply more complex rating factors here
-        # For now, just use the base value as the premium
-        premium = df[0, "BaseValue"]
+        # Process the quote using the rating engine
+        result = rating_engine.process_single_quote(quote.dict())
         
         # Create response
         response = PremiumResponse(
-            premium=float(premium),
+            premium=result["premium"],
             quote=quote,
-            factors={"base_value": float(premium)}
+            factors=result["factors"]
         )
         
         return response
     
+    except ValueError as e:
+        logger.error(f"Error calculating premium: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error calculating premium: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error calculating premium: {str(e)}")
@@ -141,35 +131,31 @@ async def calculate_premiums_batch(request: InsuranceQuoteBatch):
     This endpoint accepts a list of insurance quotes and returns a list of calculated premiums.
     """
     try:
+        if rating_engine is None:
+            raise HTTPException(status_code=500, detail="Rating engine not available")
+        
         quotes = request.quotes
         if not quotes:
             raise HTTPException(status_code=400, detail="No quotes provided")
-            
-        # Convert to DataFrame
-        df = pl.DataFrame([q.dict() for q in quotes])
         
-        # Apply category indexing (transformations)
-        df, _ = transformer.apply_category_indexing(df)
-        
-        # Apply base rating
-        df, base_values = apply_base_rating(df)
-        
-        if "BaseValue" not in df.columns:
-            raise HTTPException(status_code=500, detail="Failed to calculate base premiums")
+        # Process the quotes using the rating engine
+        results_data = rating_engine.process_batch_quotes([q.dict() for q in quotes])
         
         # Create responses
         results = []
         for i, quote in enumerate(quotes):
-            premium = df[i, "BaseValue"]
             response = PremiumResponse(
-                premium=float(premium),
+                premium=results_data[i]["premium"],
                 quote=quote,
-                factors={"base_value": float(premium)}
+                factors=results_data[i]["factors"]
             )
             results.append(response)
         
         return PremiumResponseBatch(results=results)
     
+    except ValueError as e:
+        logger.error(f"Error calculating premiums: {e}")
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error calculating premiums in batch: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error calculating premiums: {str(e)}") 

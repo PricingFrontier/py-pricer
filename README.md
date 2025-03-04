@@ -17,6 +17,8 @@ This separation allows users to focus on their pricing logic while the library h
 - Calculate prices using user-defined rating algorithms
 - Interactive Streamlit dashboard to visualize data and results
 - REST API for programmatic premium calculations
+- Console scripts for easy launching of apps and services
+- Automated initialization process with example files
 
 ## Installation
 
@@ -34,7 +36,7 @@ uv pip install py-pricer
 
 ## Getting Started
 
-After installation, you need to initialize the `algorithms` folder with example files. You can do this using the command-line tool:
+After installation, you need to initialize the `algorithms` folder with example files. You can do this using the console script:
 
 ```bash
 py-pricer-init
@@ -65,8 +67,9 @@ py-pricer-app
 
 If you encounter issues with the console script, you can also run the app directly:
 
-```bash
-python -c "from py_pricer.app_launcher import launch_app; launch_app()"
+```python
+from py_pricer.app_launcher import launch_app
+launch_app()
 ```
 
 This will automatically open your default web browser with the Streamlit dashboard. If the browser doesn't open automatically, you can access the app at http://localhost:8501.
@@ -81,7 +84,7 @@ When you install the py_pricer package and run the initializer, it automatically
 
 ```bash
 # First, initialize the package
-python -m py_pricer.initializer
+py-pricer-init
 
 # This creates:
 # - run_api.py: Script to run the API server
@@ -254,11 +257,17 @@ py-pricer/
 ├── py_pricer/                  # LIBRARY CODE (DO NOT MODIFY)
 │   ├── __init__.py
 │   ├── initializer.py          # Creates the algorithms folder with examples
+│   ├── initializer_launcher.py # Console script entry point for initializer
 │   ├── data_processor.py       # Data loading and processing
 │   ├── transformer.py          # Transformation framework
 │   ├── rating_engine.py        # Rating calculation engine
 │   ├── app.py                  # Streamlit application
-│   └── api.py                  # FastAPI application
+│   ├── app_launcher.py         # Console script entry point for Streamlit app
+│   ├── api.py                  # FastAPI application
+│   ├── api_launcher.py         # Console script entry point for API
+│   ├── config.py               # Configuration settings
+│   ├── logging_config.py       # Logging setup
+│   └── utils.py                # Utility functions
 ├── algorithms/                 # USER-EDITABLE CONTENT
 │   ├── data/                   # Your data files
 │   │   └── input/              # Raw input data (JSON/parquet)
@@ -277,9 +286,29 @@ py-pricer/
 4. The Streamlit app (`py-pricer-app`) uses both components to process data and calculate prices
 5. The API (`py-pricer-api`) provides programmatic access to the pricing functionality
 
-## License
+## New Features and Improvements
 
-[License information]
+### Enhanced Initializer
+- Improved error handling and logging during initialization
+- Automatic download of API template files to your working directory
+- Detailed feedback on the initialization process
+- Support for forcing overwrite of existing files with `--force` flag
+
+### Launcher Scripts
+- Dedicated launcher scripts for all components (app, API, initializer)
+- Console script entry points for easy command-line usage
+- Improved error handling and user feedback
+
+### Improved Logging
+- Centralized logging configuration
+- Consistent log format across all components
+- Configurable log levels via command-line arguments
+
+### API Enhancements
+- Robust error handling with appropriate HTTP status codes
+- Improved request validation using Pydantic models
+- Support for configuration via command-line arguments
+- Better integration with the core rating engine
 
 ## Troubleshooting
 
@@ -328,3 +357,7 @@ If the app can't find the data or algorithms directory:
    ```
 2. Check that the algorithms directory exists in your working directory
 3. If you're in a development environment, try specifying the path manually
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

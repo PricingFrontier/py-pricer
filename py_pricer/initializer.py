@@ -30,6 +30,7 @@ GITHUB_REPO_URL = "https://github.com/PricingFrontier/py-pricer"
 GITHUB_BRANCH = "main"
 GITHUB_ARCHIVE_URL = f"{GITHUB_REPO_URL}/archive/refs/heads/{GITHUB_BRANCH}.zip"
 ALGORITHMS_DIR_NAME = "algorithms"
+API_DIR_NAME = "api"
 API_TEMPLATE_FILES = ["run_api.py", "test_api.py"]
 
 def download_api_templates_from_github(force=False):
@@ -79,10 +80,14 @@ def download_api_templates_from_github(force=False):
             # Get the current working directory
             cwd = os.getcwd()
             
-            # Copy each template file to the working directory
+            # Create the api directory if it doesn't exist
+            api_dir = os.path.join(cwd, API_DIR_NAME)
+            os.makedirs(api_dir, exist_ok=True)
+            
+            # Copy each template file to the api directory
             for filename in API_TEMPLATE_FILES:
                 src_path = os.path.join(templates_dir, filename)
-                dst_path = os.path.join(cwd, filename)
+                dst_path = os.path.join(api_dir, filename)
                 
                 # Skip if destination file already exists and force is False
                 if os.path.exists(dst_path) and not force:
@@ -94,7 +99,7 @@ def download_api_templates_from_github(force=False):
                     try:
                         shutil.copy2(src_path, dst_path)
                         os.chmod(dst_path, 0o755)  # Make executable
-                        logger.info(f"Copied API template file: {filename}")
+                        logger.info(f"Copied API template file to api directory: {filename}")
                         copied_files.append(dst_path)
                     except Exception as e:
                         logger.error(f"Error copying API template file {filename}: {e}")

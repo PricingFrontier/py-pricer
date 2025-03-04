@@ -3,9 +3,9 @@
 Test script to demonstrate how to call the Insurance Premium API.
 
 Usage:
-    python test_api.py                    # Uses algorithms/data/1.json by default
-    python test_api.py 5.json             # Uses algorithms/data/5.json
-    python test_api.py path/to/quote.json # Uses a specific JSON file path
+    python api/test_api.py                    # Uses algorithms/data/1.json by default
+    python api/test_api.py 5.json             # Uses algorithms/data/5.json
+    python api/test_api.py path/to/quote.json # Uses a specific JSON file path
 """
 
 import requests
@@ -82,7 +82,7 @@ def main():
             return
     except requests.exceptions.ConnectionError:
         print(f"Error: Could not connect to API at {API_URL}")
-        print("Make sure the API is running with 'python run_api.py'")
+        print("Make sure the API is running with 'python api/run_api.py'")
         return
     
     # Get the JSON file path from command line arguments if provided
