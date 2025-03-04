@@ -101,7 +101,10 @@ def ensure_directory_exists(directory: str) -> bool:
 
 def load_config_json(file_path: str) -> Optional[Dict[str, Any]]:
     """
-    Load a JSON configuration file with error handling.
+    Load a configuration JSON file.
+    
+    This is a specialized version of safe_load_json specifically for config files.
+    It provides more detailed logging and handling for configuration.
     
     Args:
         file_path: Path to the JSON configuration file
@@ -109,17 +112,41 @@ def load_config_json(file_path: str) -> Optional[Dict[str, Any]]:
     Returns:
         Loaded configuration as a dictionary or None if loading failed
     """
+    result = safe_load_json(file_path)
+    if result is None:
+        logger.warning(f"Failed to load configuration from {file_path}")
+    else:
+        logger.info(f"Loaded configuration with {len(result)} items from {file_path}")
+    return result
+
+def load_csv_table(file_path: str, base_dir: Optional[str] = None) -> Optional[pl.DataFrame]:
+    """
+    Load a CSV file from the specified path.
+    
+    Args:
+        file_path: Path to the CSV file or relative filename
+        base_dir: Base directory to use if file_path is not absolute. Default is None (use file_path as is).
+    
+    Returns:
+        A DataFrame containing the CSV data or None if loading fails
+    """
     try:
-        with open(file_path, 'r') as f:
-            config = json.load(f)
-        logger.info(f"Successfully loaded configuration from {file_path}")
-        return config
-    except FileNotFoundError:
-        logger.error(f"Configuration file not found: {file_path}")
-        return None
-    except json.JSONDecodeError as e:
-        logger.error(f"Error decoding JSON configuration from {file_path}: {e}")
-        return None
+        # Determine the complete path
+        complete_path = file_path
+        if not os.path.isabs(file_path) and base_dir is not None:
+            complete_path = os.path.join(base_dir, file_path)
+        
+        # Check if the file exists
+        if not os.path.exists(complete_path):
+            logger.error(f"CSV file not found at: {complete_path}")
+            return None
+        
+        # Load the CSV file
+        df = pl.read_csv(complete_path)
+        logger.info(f"Successfully loaded CSV from {complete_path}")
+        logger.info(f"Data loaded: {df.height} rows, {df.width} columns")
+        
+        return df
     except Exception as e:
-        logger.error(f"Unexpected error loading configuration from {file_path}: {e}", exc_info=True)
+        logger.error(f"Error loading CSV {file_path}: {e}")
         return None 

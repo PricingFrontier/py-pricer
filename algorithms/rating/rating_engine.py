@@ -9,6 +9,11 @@ import polars as pl
 import logging
 from typing import Dict, Any, List, Union, Optional
 
+# Import utilities
+from py_pricer.utils import load_csv_table
+from py_pricer.rating import process_single_quote as core_process_single_quote
+from py_pricer import transformer
+
 # Create a module-specific logger
 logger = logging.getLogger('py_pricer.rating_engine')
 
@@ -19,24 +24,9 @@ def load_base_values():
     Returns:
         A DataFrame containing the base values or None if loading fails
     """
-    try:
-        # Path to the base values CSV file
-        base_values_path = os.path.join(os.path.dirname(__file__), "tables", "base-values.csv")
-        
-        # Check if the file exists
-        if not os.path.exists(base_values_path):
-            logger.error(f"Base values file not found at: {base_values_path}")
-            return None
-        
-        # Load the CSV file
-        df = pl.read_csv(base_values_path)
-        logger.info(f"Successfully loaded base values from {base_values_path}")
-        logger.info(f"Base values loaded: {df.height} rows")
-        
-        return df
-    except Exception as e:
-        logger.error(f"Error loading base values: {e}")
-        return None
+    # Get the tables directory relative to this file
+    tables_dir = os.path.join(os.path.dirname(__file__), "tables")
+    return load_csv_table("base-values.csv", base_dir=tables_dir)
 
 def apply_base_rating(df):
     """
@@ -122,8 +112,7 @@ def calculate_premium(df):
         logger.error(f"Error calculating premium: {e}")
         return df
 
-# New functions for API integration
-
+# Internal function for processing quotes
 def _process_quotes(quotes_data):
     """
     Internal function to process quotes and calculate premiums.
@@ -137,8 +126,6 @@ def _process_quotes(quotes_data):
     Raises:
         ValueError: If premium calculation fails
     """
-    from py_pricer import transformer
-    
     if not quotes_data:
         raise ValueError("No quotes provided")
         
@@ -148,45 +135,18 @@ def _process_quotes(quotes_data):
     # Apply category indexing (transformations)
     df, _ = transformer.apply_category_indexing(df)
     
+    # Apply continuous banding
+    df = transformer.apply_continuous_banding(df)
+    
     # Apply base rating
-    df, base_values = apply_base_rating(df)
+    df, _ = apply_base_rating(df)
     
-    if "BaseValue" not in df.columns:
-        raise ValueError("Failed to calculate base premiums")
-    
-    # Calculate the final premiums
+    # Calculate premium
     df = calculate_premium(df)
     
     return df
 
-def _extract_premium_and_factors(df, row_index):
-    """
-    Extract premium and factors from a DataFrame row.
-    
-    Args:
-        df: DataFrame with calculated premiums
-        row_index: Index of the row to extract from
-        
-    Returns:
-        Tuple of (premium, factors_dict)
-    """
-    # Use Premium column if available, otherwise use BaseValue
-    if "Premium" in df.columns:
-        premium = float(df[row_index, "Premium"])
-    else:
-        premium = float(df[row_index, "BaseValue"])
-    
-    # Collect all factors used in the calculation
-    factors = {"base_value": float(df[row_index, "BaseValue"])}
-    
-    # Add any additional factors that might be in the DataFrame
-    # For example, if there are columns that end with "Factor", include them
-    for col in df.columns:
-        if col.endswith("Factor") and col in df.columns:
-            factors[col] = float(df[row_index, col])
-    
-    return premium, factors
-
+# API-compatible functions that use the core implementation
 def process_single_quote(quote_data: Dict[str, Any]) -> Dict[str, Any]:
     """
     Process a single insurance quote and calculate the premium.
@@ -196,56 +156,5 @@ def process_single_quote(quote_data: Dict[str, Any]) -> Dict[str, Any]:
         
     Returns:
         Dictionary with premium and factors information
-        
-    Raises:
-        ValueError: If premium calculation fails
     """
-    try:
-        # Process the quote using the common function
-        df = _process_quotes([quote_data])
-        
-        # Extract the premium and factors
-        premium, factors = _extract_premium_and_factors(df, 0)
-        
-        return {
-            "premium": premium,
-            "factors": factors
-        }
-    
-    except Exception as e:
-        logger.error(f"Error processing quote: {e}", exc_info=True)
-        raise ValueError(f"Error calculating premium: {str(e)}")
-
-def process_batch_quotes(quotes_data: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """
-    Process multiple insurance quotes and calculate premiums.
-    
-    Args:
-        quotes_data: List of dictionaries containing quote data
-        
-    Returns:
-        List of dictionaries with premium and factors information
-        
-    Raises:
-        ValueError: If premium calculation fails
-    """
-    try:
-        # Process the quotes using the common function
-        df = _process_quotes(quotes_data)
-        
-        # Create responses
-        results = []
-        for i in range(len(quotes_data)):
-            # Extract the premium and factors
-            premium, factors = _extract_premium_and_factors(df, i)
-            
-            results.append({
-                "premium": premium,
-                "factors": factors
-            })
-        
-        return results
-    
-    except Exception as e:
-        logger.error(f"Error processing batch quotes: {e}", exc_info=True)
-        raise ValueError(f"Error calculating premiums: {str(e)}")
+    return core_process_single_quote(_process_quotes, quote_data)

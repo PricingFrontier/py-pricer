@@ -10,8 +10,8 @@ from typing import Dict, Any, List, Union, Optional
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 
-from py_pricer import get_rating_dir
-import importlib.util
+# Import the rating engine directly
+from algorithms.rating.rating_engine import process_single_quote
 
 # Create a module-specific logger
 logger = logging.getLogger('py_pricer.api')
@@ -52,35 +52,7 @@ class PremiumResponse(BaseModel):
     quote: InsuranceQuote
     factors: Dict[str, float] = Field(default_factory=dict)
 
-class InsuranceQuoteBatch(BaseModel):
-    quotes: List[InsuranceQuote]
-
-class PremiumResponseBatch(BaseModel):
-    results: List[PremiumResponse]
-
-# Dynamically import the rating_engine module
-def import_rating_engine():
-    try:
-        rating_dir = get_rating_dir()
-        rating_engine_path = os.path.join(rating_dir, "rating_engine.py")
-        
-        if not os.path.exists(rating_engine_path):
-            logger.error(f"Rating engine not found at: {rating_engine_path}")
-            return None
-            
-        module_name = "rating_engine"
-        spec = importlib.util.spec_from_file_location(module_name, rating_engine_path)
-        module = importlib.util.module_from_spec(spec)
-        spec.loader.exec_module(module)
-        
-        logger.info(f"Successfully imported rating engine from {rating_engine_path}")
-        return module
-    except Exception as e:
-        logger.error(f"Error importing rating engine: {e}", exc_info=True)
-        return None
-
-# Import the rating_engine module
-rating_engine = import_rating_engine()
+# Removed InsuranceQuoteBatch and PremiumResponseBatch classes
 
 # Create the FastAPI application
 app = FastAPI(
@@ -101,11 +73,8 @@ async def calculate_premium(quote: InsuranceQuote):
     This endpoint accepts a JSON object representing an insurance quote and returns the calculated premium.
     """
     try:
-        if rating_engine is None:
-            raise HTTPException(status_code=500, detail="Rating engine not available")
-        
         # Process the quote using the rating engine
-        result = rating_engine.process_single_quote(quote.dict())
+        result = process_single_quote(quote.dict())
         
         # Create response
         response = PremiumResponse(
@@ -121,41 +90,4 @@ async def calculate_premium(quote: InsuranceQuote):
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error calculating premium: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error calculating premium: {str(e)}")
-
-@app.post("/calculate_premiums_batch", response_model=PremiumResponseBatch)
-async def calculate_premiums_batch(request: InsuranceQuoteBatch):
-    """
-    Calculate premiums for multiple insurance quotes in a batch.
-    
-    This endpoint accepts a list of insurance quotes and returns a list of calculated premiums.
-    """
-    try:
-        if rating_engine is None:
-            raise HTTPException(status_code=500, detail="Rating engine not available")
-        
-        quotes = request.quotes
-        if not quotes:
-            raise HTTPException(status_code=400, detail="No quotes provided")
-        
-        # Process the quotes using the rating engine
-        results_data = rating_engine.process_batch_quotes([q.dict() for q in quotes])
-        
-        # Create responses
-        results = []
-        for i, quote in enumerate(quotes):
-            response = PremiumResponse(
-                premium=results_data[i]["premium"],
-                quote=quote,
-                factors=results_data[i]["factors"]
-            )
-            results.append(response)
-        
-        return PremiumResponseBatch(results=results)
-    
-    except ValueError as e:
-        logger.error(f"Error calculating premiums: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.error(f"Error calculating premiums in batch: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Error calculating premiums: {str(e)}") 
+        raise HTTPException(status_code=500, detail=f"Error calculating premium: {str(e)}") 

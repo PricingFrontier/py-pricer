@@ -180,46 +180,6 @@ The API scripts are designed to continue working correctly with the py_pricer pa
    }
    ```
 
-2. **Calculate Premiums for Multiple Quotes (Batch)**
-
-   ```
-   POST /calculate_premiums_batch
-   ```
-
-   Example request:
-   ```json
-   {
-     "quotes": [
-       {
-         "IDpol": 1,
-         "Exposure": 0.1,
-         "VehPower": 5,
-         "VehAge": 0,
-         "DrivAge": 55,
-         "BonusMalus": 50,
-         "VehBrand": "B12",
-         "VehGas": "Regular",
-         "Area": "D",
-         "Density": 1217,
-         "Region": "Rhone-Alpes"
-       },
-       {
-         "IDpol": 3,
-         "Exposure": 0.5,
-         "VehPower": 6,
-         "VehAge": 2,
-         "DrivAge": 45,
-         "BonusMalus": 60,
-         "VehBrand": "B2",
-         "VehGas": "Diesel",
-         "Area": "B",
-         "Density": 900,
-         "Region": "Paris"
-       }
-     ]
-   }
-   ```
-
 ### API Documentation
 
 FastAPI automatically generates interactive API documentation:

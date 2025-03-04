@@ -20,7 +20,7 @@ except ImportError:
     from typing_extensions import TypedDict, Protocol
 
 from py_pricer import get_transformations_dir, logger
-from py_pricer.config import CATEGORICAL_THRESHOLD, CATEGORY_INDEX_FILE
+from py_pricer.config import CATEGORICAL_THRESHOLD, CATEGORY_INDEX_FILE, CONTINUOUS_BANDING_FILE
 from py_pricer.utils import load_config_json
 
 # Create a module-specific logger
@@ -77,9 +77,94 @@ def load_factor_config():
         return {}
 
 
+def load_continuous_bands():
+    """
+    Load continuous banding configuration from the algorithms/transformations/continuous-banding.json file.
+    
+    Returns:
+        Dictionary containing continuous banding configuration or None if loading fails
+    """
+    transformations_dir = get_transformations_dir()
+    config_path = os.path.join(transformations_dir, CONTINUOUS_BANDING_FILE)
+    logger.info(f"Looking for continuous bands at: {config_path}")
+    
+    bands = load_config_json(config_path)
+    
+    if bands:
+        logger.info(f"Successfully loaded continuous bands for variables: {list(bands.keys())}")
+        return bands
+    else:
+        return {}
+
+
+def apply_continuous_banding(df: pl.DataFrame) -> pl.DataFrame:
+    """
+    Apply continuous variable banding based on the continuous-banding.json configuration.
+    
+    Args:
+        df: Input DataFrame
+        
+    Returns:
+        DataFrame with new banded columns
+    """
+    try:
+        # Load continuous bands configuration
+        bands_config = load_continuous_bands()
+        if not bands_config:
+            logger.warning("No continuous bands configuration found. Skipping banding.")
+            return df
+        
+        # Apply bands for each configured variable
+        for variable, config in bands_config.items():
+            # Skip if source column doesn't exist
+            if variable not in df.columns:
+                logger.warning(f"{variable} column not found. Skipping banding for this variable.")
+                continue
+            
+            # Create the banding logic
+            when_then_chain = None
+            
+            # Create band column
+            bands = config["bands"]
+            for band in bands:
+                min_val = band["min"]
+                max_val = band["max"]
+                label = band["label"]
+                
+                # Create condition based on inclusivity settings
+                if config.get("min_inclusive", True) and config.get("max_exclusive", True):
+                    condition = (pl.col(variable) >= min_val) & (pl.col(variable) < max_val)
+                elif config.get("min_inclusive", True) and not config.get("max_exclusive", True):
+                    condition = (pl.col(variable) >= min_val) & (pl.col(variable) <= max_val)
+                elif not config.get("min_inclusive", True) and config.get("max_exclusive", True):
+                    condition = (pl.col(variable) > min_val) & (pl.col(variable) < max_val)
+                else:
+                    condition = (pl.col(variable) > min_val) & (pl.col(variable) <= max_val)
+                
+                # Start or continue the chain
+                if when_then_chain is None:
+                    when_then_chain = pl.when(condition).then(pl.lit(label))
+                else:
+                    when_then_chain = when_then_chain.when(condition).then(pl.lit(label))
+            
+            # Finalize and add the column
+            if when_then_chain is not None:
+                band_column = config.get("column_name", f"{variable}Band")
+                df = df.with_columns(when_then_chain.otherwise(pl.lit("Unknown")).alias(band_column))
+                logger.info(f"Created band column {band_column} for {variable}")
+        
+        return df
+    except Exception as e:
+        logger.error(f"Error applying continuous banding: {e}", exc_info=True)
+        return df
+
+
 def apply_transformations(df: pl.DataFrame) -> Optional[pl.DataFrame]:
     """
     Apply transformations to the input data using the user-defined transformation script.
+    
+    If no user-defined transformation script is found, default transformations are applied:
+    1. Continuous banding based on continuous-banding.json
     
     Args:
         df: Raw input data as a Polars DataFrame
@@ -87,25 +172,32 @@ def apply_transformations(df: pl.DataFrame) -> Optional[pl.DataFrame]:
     Returns:
         Transformed data as a Polars DataFrame or None if transformation failed
     """
-    # Load the transformation module
+    # First try to load and apply user-defined transformations
     transform_module = load_transformation_module()
     
-    if transform_module is None:
-        logger.info("No transformation module found. Returning original data.")
-        return df
-    
-    # Check if the module has a transform_data function
-    if not hasattr(transform_module, "transform_data"):
-        logger.warning("Transformation module does not have a transform_data function. Returning original data.")
-        return df
+    if transform_module is not None and hasattr(transform_module, "apply_transformations"):
+        try:
+            # Apply the user-defined transformations
+            transformed_df = transform_module.apply_transformations(df)
+            logger.info("Successfully applied user-defined transformations")
+            return transformed_df
+        except Exception as e:
+            logger.error(f"Error applying user-defined transformations: {e}", exc_info=True)
+            logger.info("Falling back to default transformations")
+    else:
+        logger.info("No user-defined transformation module found. Applying default transformations.")
     
     try:
-        # Apply the transformation
-        transformed_df = transform_module.transform_data(df)
-        logger.info("Successfully applied transformations")
-        return transformed_df
+        # Apply default transformations
+        logger.info("Applying default transformations...")
+        
+        # Apply continuous banding
+        df = apply_continuous_banding(df)
+        
+        logger.info("Default transformations completed")
+        return df
     except Exception as e:
-        logger.error(f"Error applying transformations: {e}", exc_info=True)
+        logger.error(f"Error applying default transformations: {e}", exc_info=True)
         return None
 
 

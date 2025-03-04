@@ -19,6 +19,7 @@ SUPPORTED_DATA_FORMATS = ['.json', '.parquet']
 
 # Configuration files
 CATEGORY_INDEX_FILE = "category-index.json"
+CONTINUOUS_BANDING_FILE = "continuous-banding.json"
 
 # Streamlit configuration
 STREAMLIT_PAGE_TITLE = "Insurance Pricing Library"
