@@ -1,1 +1,0 @@
-# Rating tables module

@@ -16,7 +16,7 @@
             {"min": 5, "max": 8, "label": "Medium"},
             {"min": 8, "max": 999, "label": "High"}
         ],
-        "column_name": "PowerGroup",
+        "column_name": "VehPowerBand",
         "min_inclusive": true,
         "max_exclusive": true
     },
@@ -27,7 +27,7 @@
             {"min": 7, "max": 12, "label": "Mature"},
             {"min": 12, "max": 999, "label": "Old"}
         ],
-        "column_name": "VehAgeGroup",
+        "column_name": "VehAgeBand",
         "min_inclusive": true,
         "max_exclusive": true
     },
@@ -38,7 +38,7 @@
             {"min": 100, "max": 150, "label": "Neutral"},
             {"min": 150, "max": 9999, "label": "Malus"}
         ],
-        "column_name": "BonusMalusGroup",
+        "column_name": "BonusMalusBand",
         "min_inclusive": true,
         "max_exclusive": true
     },
@@ -49,18 +49,8 @@
             {"min": 1000, "max": 5000, "label": "Urban"},
             {"min": 5000, "max": 99999, "label": "Metropolitan"}
         ],
-        "column_name": "DensityGroup",
+        "column_name": "DensityBand",
         "min_inclusive": true,
         "max_exclusive": true
-    },
-    "Exposure": {
-        "bands": [
-            {"min": 0, "max": 0.25, "label": "Minimal"},
-            {"min": 0.25, "max": 0.75, "label": "Partial"},
-            {"min": 0.75, "max": 1.0, "label": "Full"}
-        ],
-        "column_name": "ExposureGroup",
-        "min_inclusive": true,
-        "max_exclusive": false
     }
 } 
