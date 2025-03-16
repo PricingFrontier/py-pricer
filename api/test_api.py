@@ -95,44 +95,13 @@ def test_api(host="127.0.0.1", port=8000, specific_file=None):
             print(f"Request failed with status code {response.status_code}")
             print("\nError response:")
             print(json.dumps(response.json(), indent=2))
-    except FileNotFoundError as e:
-        print(f"Error: {str(e)}")
-        print("Falling back to hardcoded sample quote...")
-        
-        # Fallback to hardcoded sample quote
-        sample_quote = {
-            "IDpol": 1,
-            "VehPower": 5,
-            "VehAge": 2,
-            "DrivAge": 30,
-            "BonusMalus": 50,
-            "VehBrand": "B1",
-            "VehGas": "Regular",
-            "Area": "A",
-            "Density": 800,
-            "Region": "R1"
-        }
-        
-        # Request payload
-        payload = {
-            "data": sample_quote
-        }
-        
-        # Send the request
-        print(f"Sending request to {url}...")
-        response = requests.post(url, json=payload)
-        
-        # Check if the request was successful
-        if response.status_code == 200:
-            print("Request successful!")
-            print("\nResponse:")
-            print(json.dumps(response.json(), indent=2))
-        else:
-            print(f"Request failed with status code {response.status_code}")
-            print("\nError response:")
-            print(json.dumps(response.json(), indent=2))
     except Exception as e:
         print(f"Error: {str(e)}")
+        print("Could not load a sample quote or connect to the API.")
+        print("Please ensure that:")
+        print("  1. The algorithms/data/individual directory contains JSON files")
+        print("  2. The API server is running")
+        print("  3. The host and port are correct")
 
 def list_available_files():
     """

@@ -5,7 +5,7 @@ This module provides a REST API for processing insurance quotes.
 """
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
 from fastapi.middleware.cors import CORSMiddleware
 import logging
 import traceback
@@ -69,6 +69,17 @@ async def global_exception_handler(request: Request, exc: Exception):
             details={"message": str(exc)}
         ).dict()
     )
+
+# Root endpoint
+@app.get("/", tags=["Documentation"])
+async def root():
+    """
+    Root endpoint that redirects to the API documentation.
+    
+    Returns:
+        Redirect to the API documentation
+    """
+    return RedirectResponse(url="/docs")
 
 # Health check endpoint
 @app.get("/health", tags=["Health"])

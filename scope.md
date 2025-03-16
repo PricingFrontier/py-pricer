@@ -29,15 +29,18 @@ py-pricer/
 │   └── app_launcher.py                 # Entry point for Streamlit app
 ├── api/                                # API IMPLEMENTATION
 │   ├── __init__.py                     # Package initialization
-│   ├── api.py                          # FastAPI implementation
+│   ├── api.py                          # FastAPI implementation for processing quotes
+│   ├── models.py                       # Pydantic models for request/response validation
+│   ├── utils.py                        # Helper functions for processing quotes
 │   ├── run_api.py                      # Script to run the API server
-│   ├── test_api.py                     # Script to test the API
+│   ├── test_api.py                     # Script to test the API with sample quotes
 │   └── README.md                       # API documentation
 ├── streamlit/                          # STREAMLIT APP IMPLEMENTATION
 │   ├── app.py                          # Main Streamlit app implementation
 │   ├── raw_data.py                     # Raw data viewing module
 │   ├── banded_data.py                  # Banded categories viewing module
-│   └── indexed_data.py                 # Indexed categories viewing module
+│   ├── indexed_data.py                 # Indexed categories viewing module
+│   └── rated_data.py                   # Rating results viewing module
 ├── algorithms/                         # USER-EDITABLE CONTENT
 │   ├── README.md                       # Documentation for algorithms
 │   ├── config.py                       # User configuration settings
@@ -63,11 +66,18 @@ py-pricer/
 │   └── rating/                         # User-defined rating algorithms
 │       ├── __init__.py                 # Package initialization
 │       ├── rating_engine.py            # Rating engine implementation
+│       ├── utils/                      # Utility functions for rating
+│       │   ├── __init__.py             # Package initialization
+│       │   └── table_loader.py         # Functions for loading rating tables
 │       └── tables/                     # Rating tables for calculations
 │           ├── __init__.py             # Package initialization
+│           ├── Area.csv                # Area rating factors
+│           ├── VehAge_rating.csv       # Vehicle age rating factors
+│           ├── VehPower_x_DrivAge.csv  # Vehicle power and driver age cross-rating factors
 │           └── base-values.csv         # Base values for rating
 ├── logs/                               # Log files
-│   └── py_pricer.log                   # Application log file
+│   ├── py_pricer.log                   # Application log file
+│   └── api.log                         # API log file
 ├── pyproject.toml                      # Package and UV configuration
 ├── requirements.txt                    # Dependencies
 ├── MANIFEST.in                         # Package manifest
@@ -77,6 +87,24 @@ py-pricer/
 ├── run_app.py                          # Script to run the Streamlit app
 └── README.md                           # Usage documentation
 ```
+
+## API Implementation Details
+
+The API folder contains the implementation of a RESTful API for processing insurance quotes:
+
+- **api/__init__.py**: Package initialization file that defines the API package.
+
+- **api/api.py**: Main FastAPI application that defines the endpoints for processing quotes. It includes a health check endpoint and a quote processing endpoint that applies the transformation pipeline and rating engine to calculate premiums.
+
+- **api/models.py**: Pydantic models for request and response validation. It defines the structure of the quote request payload, the quote response, and error responses.
+
+- **api/utils.py**: Helper functions for processing quotes. It includes functions for converting JSON data to Polars DataFrames, extracting premium details from the rated DataFrame, and processing quotes through the transformation pipeline and rating engine.
+
+- **api/run_api.py**: Script to run the API server using Uvicorn. It includes command-line arguments for configuring the host, port, and auto-reload functionality.
+
+- **api/test_api.py**: Script to test the API by sending sample quote requests. It can load quotes from the individual directory, either randomly or a specific file specified by the user, and display the API response.
+
+- **api/README.md**: Documentation for the API, including endpoint descriptions, request/response formats, and usage instructions.
 
 ## Core Functionality
 
@@ -127,11 +155,16 @@ py-pricer/
   - Show only the indexed columns based on category-index.json configuration
   - Use primary ID as the index for better readability
 
+- **Tab 4: Rating Results View**
+  - Display premium calculations from the rating engine
+  - Show only the calculated premium fields
+  - Use primary ID as the index for better readability
+
 ### 6. API Integration
 - **FastAPI Implementation**
   - REST API for programmatic access to pricing functionality
   - Single quote processing endpoint
-  - Batch processing for multiple quotes
+  - Health check endpoint for monitoring
   - JSON input and output format
   - Swagger UI for interactive API documentation
 
@@ -140,6 +173,7 @@ py-pricer/
   - Consistent pricing with the UI application
   - Error handling and appropriate HTTP responses
   - Integration with the existing transformation and rating modules
+  - Support for processing quotes from JSON files
 
 ## Implementation Details
 
@@ -166,8 +200,8 @@ py-pricer/
 3. Install the library with UV: `uv pip install py-pricer`
 4. Initialize the project structure with example: `python -m py_pricer.initializer`
 5. Run the Streamlit app to see the example in action: `python run_app.py`
-6. Run the API server to enable programmatic access: `python run_api.py`
-7. Test the API to understand its functionality: `python test_api.py`
+6. Run the API server to enable programmatic access: `python -m api.run_api`
+7. Test the API to understand its functionality: `python -m api.test_api`
 8. Customize the example by editing files in the `algorithms` folder:
    - Replacing sample data in `algorithms/data/`
    - Modifying rating tables in `algorithms/rating/tables/`

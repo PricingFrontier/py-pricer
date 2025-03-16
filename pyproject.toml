@@ -32,12 +32,11 @@ dependencies = [
 "Bug Tracker" = "https://github.com/yourusername/py-pricer/issues"
 
 [project.scripts]
-py-pricer-app = "py_pricer.app_launcher:launch_app"
-py-pricer-api = "py_pricer.api_launcher:launch_api"
-py-pricer-init = "py_pricer.initializer_launcher:launch_initializer"
+pypricer-ui = "py_pricer.app_launcher:main"
+pypricer-api = "py_pricer.api_launcher:main"
 
 [tool.setuptools]
-packages = ["py_pricer"]
+packages = ["py_pricer", "api", "streamlit", "algorithms"]
 include-package-data = true
 
 # Templates are now downloaded from GitHub during initialization
