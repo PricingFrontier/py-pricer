@@ -34,6 +34,8 @@ dependencies = [
 [project.scripts]
 pypricer-ui = "py_pricer.app_launcher:main"
 pypricer-api = "py_pricer.api_launcher:main"
+pypricer-init = "py_pricer.init_env:main"
+pypricer-deploy = "py_pricer.deploy:main"
 
 [tool.setuptools]
 packages = ["py_pricer", "api", "streamlit", "algorithms"]
